@@ -311,14 +311,12 @@ async def ws_handler(request):
                         json.dumps({"type": "canvas_snapshot", "board_id": bid, "snapshot": snapshot}),
                         exclude_ws=ws)
 
-            elif mtype == "stroke":
-                # Real-time stroke broadcast — don't save each stroke individually
-                # (snapshot saves periodically)
+            elif mtype in ("stroke", "stroke_complete", "shape_complete"):
+                # Broadcast stroke data to room peers — full stroke sent at once
                 bid = data.get("board_id") or active_board
                 if bid:
                     await broadcast_room(code, bid,
-                        json.dumps({"type": "stroke", "board_id": bid,
-                                    "stroke": data.get("stroke")}),
+                        json.dumps(data),
                         exclude_ws=ws)
 
             elif mtype == "join_board":
