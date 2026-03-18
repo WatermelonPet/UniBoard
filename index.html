@@ -2251,12 +2251,14 @@ function enterFocus() {
   $('app-shell').classList.add('focus-mode');
   $('show-ui-pill').classList.remove('hidden');
   $('focus-enter-btn').classList.add('hidden');
+  _vr = null;  // viewport position changes when UI hides — invalidate cache
 }
 function exitFocus() {
   _focusMode = false;
   $('app-shell').classList.remove('focus-mode');
   $('show-ui-pill').classList.add('hidden');
   $('focus-enter-btn').classList.remove('hidden');
+  _vr = null;  // viewport position changes when UI restores — invalidate cache
 }
 
 // ─────────────────────────────────────────────────────────────────
