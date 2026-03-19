@@ -16,6 +16,7 @@ Data layout (DATA_DIR):
 """
 
 import json
+import shutil
 import logging
 import os
 import time
@@ -241,15 +242,24 @@ async def ws_handler(request):
                     await ws.send_json({"type": "board_not_found", "board_id": bid})
 
             elif mtype == "create_board":
-                name = data.get("name", "New Board").strip() or "New Board"
+                name     = data.get("name", "New Board").strip() or "New Board"
+                bg_color = data.get("bg_color", "#ffffff")
+                width    = int(data.get("width",  4000))
+                height   = int(data.get("height", 3000))
+                # Clamp to sane limits
+                width  = max(500, min(width,  16000))
+                height = max(500, min(height, 12000))
                 bid  = str(uuid.uuid4())[:8]
                 board = {
                     "id": bid,
                     "name": name,
+                    "bg_color": bg_color,
+                    "width":  width,
+                    "height": height,
                     "created": time.time(),
                     "updated": time.time(),
                     "strokes": [],
-                    "snapshot": None,   # base64 PNG for quick load
+                    "snapshot": None,
                 }
                 save_board(code, board)
                 boards = list_boards(code)
@@ -371,6 +381,11 @@ async def ws_handler(request):
                 cfg = load_global_cfg()
                 cfg["accounts"].pop(rem_code, None)
                 save_global_cfg(cfg)
+                # Delete the account's data folder and all its whiteboards
+                acct_path = account_dir(rem_code)
+                if acct_path.exists():
+                    shutil.rmtree(acct_path)
+                    logging.info(f"Deleted data folder for removed account: {rem_code}")
                 await ws.send_json({"type": "admin_accounts", "accounts": cfg["accounts"], "settings": cfg.get("settings", {})})
 
             elif mtype == "admin_update_settings":

@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>WhiteBoard</title>
+<title>UniBoard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -715,6 +715,69 @@ input[type=number]:focus, input[type=text]:focus {
 #rename-input:focus { border-color:var(--accent); }
 .rename-btns { display:flex; gap:8px; justify-content:flex-end; }
 
+/* New board modal */
+#newboard-modal {
+  position:fixed; inset:0; background:#00000088; backdrop-filter:blur(3px);
+  z-index:8500; display:flex; align-items:center; justify-content:center;
+}
+#newboard-modal.hidden { display:none; }
+#newboard-box {
+  background:#0d0d22; border:1px solid var(--border); border-radius:12px;
+  padding:22px; width:min(380px,92vw);
+  box-shadow:0 20px 60px #00000099;
+}
+#newboard-box h3 { font:600 16px var(--font); color:#fff; margin-bottom:16px; }
+.nb-label {
+  display:block; font:700 10px var(--mono); color:var(--muted);
+  letter-spacing:.12em; text-transform:uppercase; margin-bottom:6px;
+}
+.nb-sublabel {
+  font:400 10px var(--mono); color:var(--muted); margin-bottom:4px;
+}
+.nb-row { display:flex; gap:10px; align-items:center; margin-bottom:8px; }
+#nb-name {
+  width:100%; background:#080818; border:1px solid var(--border);
+  color:#fff; font:400 14px var(--mono); padding:9px 12px;
+  border-radius:8px; outline:none; margin-bottom:12px;
+}
+#nb-name:focus { border-color:var(--accent); }
+#newboard-box input[type=number] {
+  width:100%; background:#080818; border:1px solid var(--border);
+  color:#fff; font:400 13px var(--mono); padding:8px 10px;
+  border-radius:7px; outline:none;
+}
+#newboard-box input[type=number]:focus { border-color:var(--accent); }
+#nb-bg-custom {
+  width:44px; height:36px; padding:3px; cursor:pointer;
+  border-radius:8px; border:1px solid var(--border); background:none;
+  flex-shrink:0;
+}
+.nb-bg-presets { display:flex; gap:5px; flex-wrap:wrap; flex:1; }
+.nb-bg-swatch {
+  width:30px; height:30px; border-radius:6px; cursor:pointer;
+  border:2px solid transparent; transition:border-color .1s, transform .1s;
+  flex-shrink:0;
+}
+.nb-bg-swatch.selected, .nb-bg-swatch:hover { border-color:#fff; transform:scale(1.1); }
+.nb-presets-row {
+  display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;
+}
+.nb-size-btn {
+  background:#0f0f28; border:1px solid var(--border); color:var(--text);
+  font:500 12px var(--font); padding:5px 10px; border-radius:6px;
+  cursor:pointer; transition:background .12s, border-color .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.nb-size-btn:hover, .nb-size-btn.active {
+  background:#202064; border-color:var(--accent); color:#fff;
+}
+.nb-warn {
+  background:#2a1800; border:1px solid #8b4c0044; color:#e09040;
+  font:400 11px var(--mono); padding:8px 10px; border-radius:7px;
+  margin-top:4px; line-height:1.5;
+}
+.nb-warn.hidden { display:none; }
+
 /* Mobile sidebar toggle */
 #sb-toggle {
   display:none; background:none; border:none; color:var(--text);
@@ -732,7 +795,7 @@ input[type=number]:focus, input[type=text]:focus {
 <div id="keypad-screen">
   <div class="kp-title">
     <span class="kp-logo-icon"></span>
-    WhiteBoard
+    UniBoard
   </div>
   <div id="kp-display">
     <span id="kp-dots">○○○○</span>
@@ -750,7 +813,7 @@ input[type=number]:focus, input[type=text]:focus {
     <button id="sb-toggle">☰</button>
     <div class="logo">
       <span class="logo-icon"></span>
-      <span id="board-title-lbl">WhiteBoard</span>
+      <span id="board-title-lbl">UniBoard</span>
     </div>
     <div id="tab-wrap"></div>
     <button class="tb-btn" id="btn-add" title="New board">
@@ -894,7 +957,7 @@ input[type=number]:focus, input[type=text]:focus {
       <div class="settings-grid">
         <div class="settings-field">
           <label>Server Name</label>
-          <input type="text" id="set-server-name" placeholder="WhiteBoard">
+          <input type="text" id="set-server-name" placeholder="UniBoard">
         </div>
         <div class="settings-field">
           <label>Default Canvas Width (px)</label>
@@ -904,15 +967,53 @@ input[type=number]:focus, input[type=text]:focus {
           <label>Default Canvas Height (px)</label>
           <input type="number" id="set-canvas-h" placeholder="3000" min="500" max="20000">
         </div>
-        <div class="settings-field">
-          <label style="margin-bottom:8px">Show account label</label>
-          <div class="toggle-field">
-            <div class="toggle" id="tog-label" onclick="this.classList.toggle('on')"></div>
-            <span style="font:400 11px var(--mono); color:var(--muted)">in topbar</span>
-          </div>
-        </div>
+
       </div>
       <button class="adm-btn" id="btn-save-settings" style="margin-top:10px">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ NEW BOARD MODAL ═══════════════ -->
+<div id="newboard-modal" class="hidden">
+  <div id="newboard-box">
+    <h3>New Board</h3>
+
+    <label class="nb-label">Name</label>
+    <input type="text" id="nb-name" placeholder="Board name…" maxlength="60">
+
+    <label class="nb-label">Background</label>
+    <div class="nb-row">
+      <div class="nb-bg-presets" id="nb-bg-presets"></div>
+      <input type="color" id="nb-bg-custom" value="#ffffff" title="Custom colour">
+    </div>
+    <div id="nb-bg-preview" style="height:28px;border-radius:7px;border:1px solid var(--border);margin-bottom:10px;transition:background .1s;background:#fff"></div>
+
+    <label class="nb-label">Canvas Size</label>
+    <div class="nb-row" style="gap:8px">
+      <div style="flex:1">
+        <div class="nb-sublabel">Width (px)</div>
+        <input type="number" id="nb-width" value="4000" min="500" max="16000" step="100">
+      </div>
+      <div style="flex:1">
+        <div class="nb-sublabel">Height (px)</div>
+        <input type="number" id="nb-height" value="3000" min="500" max="12000" step="100">
+      </div>
+    </div>
+    <div class="nb-presets-row">
+      <button class="nb-size-btn" data-w="2000" data-h="1500">Small</button>
+      <button class="nb-size-btn" data-w="4000" data-h="3000">Medium</button>
+      <button class="nb-size-btn" data-w="8000" data-h="6000">Large</button>
+      <button class="nb-size-btn" data-w="3508" data-h="2480">A4</button>
+      <button class="nb-size-btn" data-w="3300" data-h="5100">A4 Port.</button>
+    </div>
+    <div id="nb-size-warn" class="nb-warn hidden">
+      ⚠ Large canvases use more memory and may slow down on older devices. Recommended max: 6000×4500.
+    </div>
+
+    <div class="rename-btns" style="margin-top:14px">
+      <button class="adm-btn neutral" id="nb-cancel">Cancel</button>
+      <button class="adm-btn" id="nb-confirm">Create Board</button>
     </div>
   </div>
 </div>
@@ -1004,6 +1105,9 @@ const S = {
   snapshotBase: null,  // canvas state before shape drag
   strokePts: [],       // accumulated points for current stroke (batch-sent on up)
   strokeMeta: null,    // {col, sz, op} for current stroke
+  boardBg: {},         // boardId → background colour
+  wetCanvas: null,     // set after DOM ready
+  wetCtx: null,
 
   // Lasso
   lasso: { mode:'idle', pts:[], selCanvas:null, pos:null, dragLast:null },
@@ -1036,6 +1140,22 @@ const octx     = overlay.getContext('2d');
 const viewport = $('canvas-viewport');
 const container= $('canvas-container');
 
+// Wet canvas — used for opacity-correct brush strokes
+// Strokes are drawn here at 100% opacity, then composited onto ctx at target opacity on lift
+const S_wetCanvas = document.createElement('canvas');
+S_wetCanvas.width = CANVAS_W; S_wetCanvas.height = CANVAS_H;
+const S_wetCtx = S_wetCanvas.getContext('2d');
+
+function renderWet() {
+  // Show live preview: ctx base + wet layer at opacity
+  // We draw onto the overlay canvas so ctx stays clean until commit
+  octx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  octx.save();
+  octx.globalAlpha = S.opacity;
+  octx.drawImage(S_wetCanvas, 0, 0);
+  octx.restore();
+}
+
 // Throttled cursor position display
 let _cursorTick = 0;
 function updateCursorPos(pos) {
@@ -1045,6 +1165,9 @@ function updateCursorPos(pos) {
   $('cursor-pos').textContent = `x:${Math.round(pos.x)} y:${Math.round(pos.y)}`;
 }
 
+// Wire wet canvas into state
+S.wetCanvas = S_wetCanvas; S.wetCtx = S_wetCtx;
+
 // Resize canvases to logical size
 board.width   = CANVAS_W; board.height   = CANVAS_H;
 overlay.width = CANVAS_W; overlay.height = CANVAS_H;
@@ -1052,8 +1175,8 @@ overlay.width = CANVAS_W; overlay.height = CANVAS_H;
 container.style.width  = CANVAS_W + 'px';
 container.style.height = CANVAS_H + 'px';
 
-function whiteCanvas(c) {
-  c.getContext('2d').fillStyle = '#fff';
+function whiteCanvas(c, bg='#ffffff') {
+  c.getContext('2d').fillStyle = bg;
   c.getContext('2d').fillRect(0,0,CANVAS_W,CANVAS_H);
 }
 
@@ -1314,18 +1437,28 @@ function clientToCanvas(cx, cy) {
 // ─────────────────────────────────────────────────────────────────
 //  Board management
 // ─────────────────────────────────────────────────────────────────
-function newOffscreen() {
+function newOffscreen(bg='#ffffff') {
   const c=document.createElement('canvas');
   c.width=CANVAS_W;c.height=CANVAS_H;
-  whiteCanvas(c);return c;
+  const bctx=c.getContext('2d');
+  bctx.fillStyle=bg;
+  bctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+  return c;
 }
+function getBoardBg(bid) {
+  return (S.boardBg&&S.boardBg[bid||S.activeBoardId])||'#ffffff';
+}
+function getEraserCol() { return getBoardBg(); }
 function getActiveOffscreen() { return S.offscreens[S.activeBoardId]; }
 
 function renderBoard() {
   ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
   const off = getActiveOffscreen();
   if(off) ctx.drawImage(off,0,0);
-  else { ctx.fillStyle='#fff'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H); }
+  else {
+    const bg=(S.boardBg&&S.boardBg[S.activeBoardId])||'#ffffff';
+    ctx.fillStyle=bg; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+  }
   updateUndoBtns();
 }
 function snapshotToOffscreen() {
@@ -1361,7 +1494,7 @@ function switchBoard(bid) {
   snapshotToOffscreen();
   S.activeBoardId=bid;
   if(!S.offscreens[bid]) {
-    S.offscreens[bid]=newOffscreen();
+    S.offscreens[bid]=newOffscreen(getBoardBg(bid));
     S.undoStk[bid]=[];S.redoStk[bid]=[];
     // Load from server
     safeSend({type:'get_board', board_id:bid});
@@ -1372,10 +1505,84 @@ function switchBoard(bid) {
   safeSend({type:'join_board', board_id:bid});
 }
 
+// Background presets for new board
+const NB_BG_PRESETS = [
+  {label:'White',   color:'#ffffff'},
+  {label:'Cream',   color:'#fdf6e3'},
+  {label:'Light grey', color:'#f0f0f0'},
+  {label:'Dark grey',  color:'#2a2a2a'},
+  {label:'Black',   color:'#000000'},
+  {label:'Navy',    color:'#0d1b2a'},
+  {label:'Green',   color:'#1a2e1a'},
+];
+let _nbSelectedBg = '#ffffff';
+
+function openNewBoardModal() {
+  $('nb-name').value = '';
+  $('nb-width').value = 4000;
+  $('nb-height').value = 3000;
+  _nbSelectedBg = '#ffffff';
+  $('nb-bg-preview').style.background = _nbSelectedBg;
+  $('nb-bg-custom').value = _nbSelectedBg;
+  $('nb-size-warn').classList.add('hidden');
+  // Render bg presets
+  const pg = $('nb-bg-presets'); pg.innerHTML = '';
+  NB_BG_PRESETS.forEach(({label, color}) => {
+    const sw = document.createElement('div');
+    sw.className = 'nb-bg-swatch' + (color === _nbSelectedBg ? ' selected' : '');
+    sw.style.background = color;
+    sw.title = label;
+    sw.addEventListener('click', () => setNbBg(color));
+    sw.addEventListener('touchend', e => { e.preventDefault(); setNbBg(color); });
+    pg.appendChild(sw);
+  });
+  // Render size preset buttons as active for current values
+  document.querySelectorAll('.nb-size-btn').forEach(b => b.classList.remove('active'));
+  $('newboard-modal').classList.remove('hidden');
+  requestAnimationFrame(() => $('nb-name').focus());
+}
+
+function setNbBg(color) {
+  _nbSelectedBg = color;
+  $('nb-bg-preview').style.background = color;
+  $('nb-bg-custom').value = color;
+  document.querySelectorAll('.nb-bg-swatch').forEach(sw => {
+    sw.classList.toggle('selected', sw.style.background === color ||
+      sw.style.backgroundColor === color);
+  });
+}
+
+function checkNbSizeWarn() {
+  const w = +$('nb-width').value, h = +$('nb-height').value;
+  $('nb-size-warn').classList.toggle('hidden', w * h <= 6000 * 4500);
+}
+
+document.querySelectorAll('.nb-size-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    $('nb-width').value  = b.dataset.w;
+    $('nb-height').value = b.dataset.h;
+    document.querySelectorAll('.nb-size-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    checkNbSizeWarn();
+  });
+});
+$('nb-width').addEventListener('input', checkNbSizeWarn);
+$('nb-height').addEventListener('input', checkNbSizeWarn);
+$('nb-bg-custom').addEventListener('input', e => setNbBg(e.target.value));
+
+$('nb-confirm').addEventListener('click', () => {
+  const name = $('nb-name').value.trim() || 'New Board';
+  const width  = Math.max(500, Math.min(16000, +$('nb-width').value  || 4000));
+  const height = Math.max(500, Math.min(12000, +$('nb-height').value || 3000));
+  safeSend({type:'create_board', name, bg_color:_nbSelectedBg, width, height});
+  $('newboard-modal').classList.add('hidden');
+});
+$('nb-cancel').addEventListener('click', () => $('newboard-modal').classList.add('hidden'));
+$('nb-name').addEventListener('keydown', e => { if(e.key==='Enter') $('nb-confirm').click(); if(e.key==='Escape') $('nb-cancel').click(); });
+$('newboard-modal').addEventListener('click', e => { if(e.target===$('newboard-modal')) $('newboard-modal').classList.add('hidden'); });
+
 function addBoard() {
-  const name=prompt('Board name:');
-  if(!name?.trim())return;
-  safeSend({type:'create_board', name:name.trim()});
+  openNewBoardModal();
 }
 
 // Rename
@@ -1478,7 +1685,7 @@ function strokeLine(c, x0,y0,x1,y1, col,sz,op=1) {
   c.lineCap='round';c.lineJoin='round';
   c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();c.restore();
 }
-function getCol() { return S.tool==='eraser'?'#ffffff':S.color; }
+function getCol() { return S.tool==='eraser'?getBoardBg():S.color; }
 function getSz()  { return S.tool==='eraser'?S.brushSz*3:S.brushSz; }
 function getOp()  { return S.tool==='eraser'?1:S.opacity; }
 
@@ -1595,6 +1802,8 @@ function onDown(e) {
 
   _isDrawing = true;
   if (_idleHandle) { clearTimeout(_idleHandle); _idleHandle = null; }
+  // Clear wet canvas for fresh stroke
+  if(S.wetCtx) S.wetCtx.clearRect(0,0,CANVAS_W,CANVAS_H);
   pushUndoDeferred();
   S.drawing=true;S.last=pos;
   S.strokePts=[Math.round(pos.x), Math.round(pos.y)];
@@ -1608,9 +1817,23 @@ function onDown(e) {
     return;
   }
 
-  // Brush/eraser dot
-  ctx.save();ctx.globalAlpha=getOp();ctx.fillStyle=getCol();
-  ctx.beginPath();ctx.arc(pos.x,pos.y,getSz()/2,0,Math.PI*2);ctx.fill();ctx.restore();
+  if(S.tool==='eraser') {
+    // Eraser draws directly to ctx (no wet canvas — bg colour, full opacity)
+    const ec=getBoardBg(), esz=getSz()*3;
+    ctx.save();ctx.fillStyle=ec;
+    ctx.beginPath();ctx.arc(pos.x,pos.y,esz/2,0,Math.PI*2);ctx.fill();ctx.restore();
+  } else {
+    // Brush: draw initial dot onto wet canvas, composite at opacity on lift
+    S.wetCtx.clearRect(0,0,CANVAS_W,CANVAS_H);
+    S.wetCtx.save();
+    S.wetCtx.strokeStyle=getCol(); S.wetCtx.lineWidth=getSz();
+    S.wetCtx.lineCap='round'; S.wetCtx.lineJoin='round';
+    S.wetCtx.beginPath();
+    S.wetCtx.arc(pos.x,pos.y,getSz()/2,0,Math.PI*2);
+    S.wetCtx.fillStyle=getCol(); S.wetCtx.fill();
+    S.wetCtx.restore();
+    renderWet();
+  }
 }
 
 function onMove(e) {
@@ -1652,7 +1875,7 @@ function onMove(e) {
     const off=getActiveOffscreen();
     ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
     if(off) ctx.drawImage(off,0,0);
-    else { ctx.fillStyle='#fff'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H); }
+    else { ctx.fillStyle=(S.boardBg&&S.boardBg[S.activeBoardId])||'#ffffff'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H); }
     drawShape(ctx,S.shapeStart,pos,getCol(),getSz(),getOp());
     return;
   }
@@ -1660,16 +1883,22 @@ function onMove(e) {
   // Use coalesced events to catch all intermediate points between frames
   const events = (e.getCoalescedEvents && e.getCoalescedEvents()) || [e];
   const col=getCol(), sz=getSz(), op=getOp();
+  const wc=S.wetCtx;
   for (const ce of events) {
     const cpos = ce === e ? pos : clientToCanvas(
       ce.changedTouches ? (ce.touches[0]||ce.changedTouches[0]).clientX : ce.clientX,
       ce.changedTouches ? (ce.touches[0]||ce.changedTouches[0]).clientY : ce.clientY
     );
     const prev=S.last; S.last=cpos;
-    strokeLine(ctx, prev.x, prev.y, cpos.x, cpos.y, col, sz, op);
-    // Accumulate points for end-of-stroke batch send
+    // Draw onto wet canvas at full opacity — composited onto ctx at target opacity
+    if(S.tool==='eraser') {
+      strokeLine(ctx, prev.x, prev.y, cpos.x, cpos.y, getBoardBg(), sz*3, 1);
+    } else {
+      strokeLine(wc, prev.x, prev.y, cpos.x, cpos.y, col, sz, 1);
+    }
     S.strokePts.push(Math.round(cpos.x), Math.round(cpos.y));
   }
+  if(S.tool!=='eraser') renderWet();
 }
 
 function onUp(e) {
@@ -1690,7 +1919,7 @@ function onUp(e) {
     const off=getActiveOffscreen();
     ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
     if(off) ctx.drawImage(off,0,0);
-    else { ctx.fillStyle='#fff'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H); }
+    else { ctx.fillStyle=(S.boardBg&&S.boardBg[S.activeBoardId])||'#ffffff'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H); }
     const col=getCol(),sz=getSz(),op=getOp();
     drawShape(ctx,S.shapeStart,pos,col,sz,op);
     if(S.ws?.readyState===1) {
@@ -1705,6 +1934,17 @@ function onUp(e) {
   }
   _isDrawing = false;
   S.last=null;
+  // Commit the wet canvas onto ctx at target opacity, then clear it
+  if(S.tool==='brush') {
+    ctx.save();
+    ctx.globalAlpha = S.opacity;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(S.wetCanvas, 0, 0);
+    ctx.restore();
+    S.wetCtx.clearRect(0,0,CANVAS_W,CANVAS_H);
+    // Also clear the overlay preview
+    octx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  }
   // Send complete stroke as one message — receiver replays the polyline in order
   if(S.strokePts.length>=4 && S.ws?.readyState===1) {
     const m=S.strokeMeta||{col:getCol(),sz:getSz(),op:getOp()};
@@ -1877,7 +2117,7 @@ function handleMsg(data) {
     if(S.boards.length>0) {
       S.activeBoardId=S.boards[0].id;
       S.boards.forEach(b=>{
-        if(!S.offscreens[b.id]){S.offscreens[b.id]=newOffscreen();S.undoStk[b.id]=[];S.redoStk[b.id]=[];}
+        if(!S.offscreens[b.id]){S.offscreens[b.id]=newOffscreen(getBoardBg(b.id));S.undoStk[b.id]=[];S.redoStk[b.id]=[];}
       });
       rebuildTabs();
       safeSend({type:'get_board', board_id:S.activeBoardId});
@@ -1900,7 +2140,18 @@ function handleMsg(data) {
   if(type==='board_data') {
     const bd=data.board;
     const bid=bd.id;
-    if(!S.offscreens[bid]){S.offscreens[bid]=newOffscreen();S.undoStk[bid]=[];S.redoStk[bid]=[];}
+    // Store per-board bg colour (default white)
+    S.boardBg = S.boardBg || {};
+    S.boardBg[bid] = bd.bg_color || '#ffffff';
+    const _boardBg = S.boardBg[bid];
+    if(!S.offscreens[bid]) {
+      S.offscreens[bid]=newOffscreen(_boardBg);
+      S.undoStk[bid]=[];S.redoStk[bid]=[];
+    } else if(!bd.snapshot) {
+      // Offscreen existed before bg was known — re-fill with correct bg
+      const bctx=S.offscreens[bid].getContext('2d');
+      bctx.fillStyle=_boardBg; bctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+    }
     if(bd.snapshot) {
       const img=new Image();
       img.onload=()=>{
@@ -1908,6 +2159,8 @@ function handleMsg(data) {
         bctx.clearRect(0,0,CANVAS_W,CANVAS_H);bctx.drawImage(img,0,0);
         if(bid===S.activeBoardId)renderBoard();
       };img.src='data:image/png;base64,'+bd.snapshot;
+    } else if(bid===S.activeBoardId) {
+      renderBoard();
     }
     return;
   }
@@ -1915,8 +2168,16 @@ function handleMsg(data) {
   if(type==='board_created') {
     S.boards=data.boards;
     const nb=data.board;
-    if(!S.offscreens[nb.id]){S.offscreens[nb.id]=newOffscreen();S.undoStk[nb.id]=[];S.redoStk[nb.id]=[];}
+    const bg=nb.bg_color||'#ffffff';
+    S.boardBg=S.boardBg||{};
+    S.boardBg[nb.id]=bg;
+    if(!S.offscreens[nb.id]){
+      S.offscreens[nb.id]=newOffscreen(bg);
+      S.undoStk[nb.id]=[];S.redoStk[nb.id]=[];
+    }
     S.activeBoardId=nb.id;
+    // Paint main canvas with correct bg too
+    ctx.fillStyle=bg; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
     rebuildTabs();renderBoard();
     safeSend({type:'join_board',board_id:nb.id});
     return;
@@ -1941,7 +2202,10 @@ function handleMsg(data) {
   if(type==='board_cleared') {
     const bid=data.board_id;
     const off=S.offscreens[bid];
-    if(off){const bctx=off.getContext('2d');bctx.fillStyle='#fff';bctx.fillRect(0,0,CANVAS_W,CANVAS_H);}
+    if(off){
+      const bg=(S.boardBg&&S.boardBg[bid])||'#ffffff';
+      const bctx=off.getContext('2d');bctx.fillStyle=bg;bctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+    }
     if(bid===S.activeBoardId)renderBoard();
     return;
   }
@@ -1991,7 +2255,7 @@ function handleMsg(data) {
     const{board_id:bid,snapshot}=data;
     const img=new Image();
     img.onload=()=>{
-      if(!S.offscreens[bid]){S.offscreens[bid]=newOffscreen();S.undoStk[bid]=[];S.redoStk[bid]=[];}
+      if(!S.offscreens[bid]){S.offscreens[bid]=newOffscreen(getBoardBg(bid));S.undoStk[bid]=[];S.redoStk[bid]=[];}
       const bctx=S.offscreens[bid].getContext('2d');
       bctx.clearRect(0,0,CANVAS_W,CANVAS_H);bctx.drawImage(img,0,0);
       if(bid===S.activeBoardId){ctx.clearRect(0,0,CANVAS_W,CANVAS_H);ctx.drawImage(img,0,0);}
@@ -2048,7 +2312,8 @@ $('btn-undo').addEventListener('click',undo);
 $('btn-clear').addEventListener('click',()=>{
   if(!confirm('Clear this board?'))return;
   pushUndo();
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+  const _bg=(S.boardBg&&S.boardBg[S.activeBoardId])||'#ffffff';
+  ctx.fillStyle=_bg;ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
   snapshotToOffscreen();
   safeSend({type:'clear_board',board_id:S.activeBoardId});
 });
@@ -2098,10 +2363,9 @@ $('btn-add-account').addEventListener('click',()=>{
 
 $('btn-save-settings').addEventListener('click',()=>{
   const settings={
-    server_name:$('set-server-name').value||'WhiteBoard',
+    server_name:$('set-server-name').value||'UniBoard',
     canvas_w:parseInt($('set-canvas-w').value)||4000,
     canvas_h:parseInt($('set-canvas-h').value)||3000,
-    show_label:$('tog-label').classList.contains('on'),
   };
   safeSend({type:'admin_update_settings',settings});
 });
@@ -2132,7 +2396,6 @@ function renderAdminPanel() {
   if(S.adminSettings.server_name)$('set-server-name').value=S.adminSettings.server_name;
   if(S.adminSettings.canvas_w)$('set-canvas-w').value=S.adminSettings.canvas_w;
   if(S.adminSettings.canvas_h)$('set-canvas-h').value=S.adminSettings.canvas_h;
-  if(S.adminSettings.show_label)$('tog-label').classList.toggle('on',!!S.adminSettings.show_label);
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -2281,7 +2544,7 @@ $('lasso-bar-discard').addEventListener('touchend', e=>{ e.preventDefault(); las
 // ─────────────────────────────────────────────────────────────────
 function init() {
   buildKeypad();
-  ctx.fillStyle='#fff'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+  ctx.fillStyle=(S.boardBg&&S.boardBg[S.activeBoardId])||'#ffffff'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
   renderPresets();
   setColor('#e63946');
   cpDraw();
